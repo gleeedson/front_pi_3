@@ -1,0 +1,126 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
+import { Loader2, Trash2, CalendarDays, Users } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+const AdminPanel = () => {
+  const [users, setUsers] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [usersRes, bookingsRes] = await Promise.all([
+        api.get('/admin/usuarios'),
+        api.get('/admin/agendamentos')
+      ]);
+      setUsers(usersRes.data.users || []);
+      setBookings(bookingsRes.data || []);
+    } catch (error) {
+      console.error("Erro ao carregar dados do admin:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    // Setting up custom event listener if we want calendar to trigger refresh here later
+    window.addEventListener('refreshAdmin', fetchData);
+    return () => window.removeEventListener('refreshAdmin', fetchData);
+  }, [fetchData]);
+
+  const handleRemoveUser = async (userId) => {
+    if (!window.confirm("Deseja realmente remover este usuário?")) return;
+    try {
+      await api.delete(`/admin/usuarios/${userId}`);
+      alert("Usuário removido");
+      fetchData();
+    } catch (error) {
+      alert(error.response?.data?.detail || "Erro ao remover usuário");
+    }
+  };
+
+  const handleRemoveBooking = async (bookingId) => {
+    if (!window.confirm("Deseja realmente remover este agendamento global?")) return;
+    try {
+      await api.delete(`/admin/agendamentos/${bookingId}`);
+      alert("Agendamento removido");
+      fetchData();
+      // Dispatch event so calendar refreshes too
+      window.dispatchEvent(new Event('refreshAdmin'));
+    } catch (error) {
+      alert(error.response?.data?.detail || "Erro ao remover agendamento");
+    }
+  };
+
+  if (loading) {
+     return <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+       <Loader2 className="animate-spin" size={24} color="var(--primary)" />
+     </div>;
+  }
+
+  return (
+    <div className="admin-grid">
+      <div className="admin-card">
+        <h3>
+          <Users size={20} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }}/> 
+          Gerenciar Usuários
+        </h3>
+        <div className="list-container">
+          {users.map(u => (
+            <div key={u.id} className="list-item">
+              <div>
+                <strong>{u.nome}</strong> <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>({u.email})</span>
+                {u.is_admin && <span className="badge">Admin</span>}
+              </div>
+              {!u.is_admin && (
+                <button 
+                  onClick={() => handleRemoveUser(u.id)}
+                  className="btn btn-danger"
+                  style={{ padding: '0.4rem', borderRadius: '4px' }}
+                  title="Remover usuário"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          ))}
+          {users.length === 0 && <p style={{ color: 'var(--text-muted)' }}>Nenhum usuário encontrado.</p>}
+        </div>
+      </div>
+
+      <div className="admin-card">
+        <h3>
+          <CalendarDays size={20} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }}/>
+          Todos os Agendamentos
+        </h3>
+        <div className="list-container">
+          {bookings.map(b => (
+            <div key={b.id} className="list-item">
+              <div>
+                <strong>{b.nome_usuario}</strong>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  {format(parseISO(b.data), "dd/MM/yyyy")} às {b.hora.substring(0,5)}
+                </div>
+              </div>
+              <button 
+                onClick={() => handleRemoveBooking(b.id)}
+                className="btn btn-danger"
+                style={{ padding: '0.4rem', borderRadius: '4px' }}
+                title="Remover agendamento"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          {bookings.length === 0 && <p style={{ color: 'var(--text-muted)' }}>Nenhum agendamento encontrado.</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminPanel;
