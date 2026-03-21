@@ -9,7 +9,13 @@ const CalendarComponent = ({ selectedAdminUser, setSelectedAdminUser }) => {
   const { user } = useAuth();
   
   // Date state
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    const day = today.getDay();
+    if (day === 6) return addDays(today, 2);
+    if (day === 0) return addDays(today, 1);
+    return today;
+  });
   
   // Data states
   const [slots, setSlots] = useState({});
