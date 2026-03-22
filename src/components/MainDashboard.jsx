@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CalendarComponent from './Calendar';
 import AdminPanel from './AdminPanel';
 import { useAuth } from '../context/AuthContext';
+import Header from './Header';
 
 const MainDashboard = () => {
   const { user } = useAuth();
@@ -10,13 +11,18 @@ const MainDashboard = () => {
   const [selectedAdminUser, setSelectedAdminUser] = useState("");
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <CalendarComponent 
-        selectedAdminUser={selectedAdminUser} 
-        setSelectedAdminUser={setSelectedAdminUser} 
-      />
-      {user?.is_admin && <AdminPanel />}
-    </div>
+    <>
+      <Header title="Agendamento" />
+      <div className="container main-content-area">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <CalendarComponent 
+            selectedAdminUser={selectedAdminUser} 
+            setSelectedAdminUser={setSelectedAdminUser} 
+          />
+          {user?.is_admin && <AdminPanel />}
+        </div>
+      </div>
+    </>
   );
 };
 

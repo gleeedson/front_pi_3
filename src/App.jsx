@@ -48,25 +48,15 @@ function AppRoutes() {
         </Route>
 
         <Route path="/auth" element={
-          <>
-            <Header />
-            <div className="container main-content-area">
-              <AuthRoute>
-                <AuthScreens />
-              </AuthRoute>
-            </div>
-          </>
+          <AuthRoute>
+            <AuthScreens />
+          </AuthRoute>
         } />
 
         <Route path="/dashboard" element={
-          <>
-            <Header />
-            <div className="container main-content-area">
-              <ProtectedRoute>
-                <MainDashboard />
-              </ProtectedRoute>
-            </div>
-          </>
+          <ProtectedRoute>
+            <MainDashboard />
+          </ProtectedRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" />} />

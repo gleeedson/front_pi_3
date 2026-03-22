@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import Header from './Header';
 
 const AuthScreens = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -40,7 +41,10 @@ const AuthScreens = () => {
   };
 
   return (
-    <div className="auth-wrapper">
+    <>
+      <Header title={isLogin ? 'Login' : 'Cadastro'} />
+      <div className="container main-content-area flex items-center justify-center">
+        <div className="auth-wrapper" style={{ width: '100%' }}>
       <div className="auth-card">
         <h2>{isLogin ? 'Bem-vindo de volta' : 'Criar uma conta'}</h2>
         
@@ -115,7 +119,9 @@ const AuthScreens = () => {
           </button>
         </p>
       </div>
-    </div>
+        </div>
+      </div>
+    </>
   );
 };
 
