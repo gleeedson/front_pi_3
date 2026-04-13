@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const ContatoPage = () => {
+  const formRef = useRef(null);
+  const [status, setStatus] = useState('idle'); // idle | sending | success | error
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Obrigada pelo interesse! Entrarei em contato em breve.");
+    setStatus('sending');
+
+    emailjs
+      .sendForm(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        { publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY }
+      )
+      .then(() => {
+        setStatus('success');
+        formRef.current.reset();
+      })
+      .catch(() => {
+        setStatus('error');
+      });
   };
 
   return (
@@ -25,13 +44,14 @@ const ContatoPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         <div className="lg:col-span-7 bg-surface-container-lowest p-8 md:p-12 rounded-xl shadow-[0px_20px_40px_rgba(25,28,29,0.06)]">
-          <form className="space-y-8" onSubmit={handleSubmit}>
+          <form ref={formRef} className="space-y-8" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="font-label text-sm font-bold text-on-surface ml-1">
                   Nome
                 </label>
                 <input
+                  name="nome"
                   className="w-full bg-surface-container-low border-outline-variant/10 rounded-lg px-4 py-4 focus:ring-0 focus:border-primary/40 focus:bg-surface-container-lowest transition-all placeholder:text-outline"
                   placeholder="Seu nome completo"
                   type="text"
@@ -43,6 +63,7 @@ const ContatoPage = () => {
                   E-mail
                 </label>
                 <input
+                  name="email"
                   className="w-full bg-surface-container-low border-outline-variant/10 rounded-lg px-4 py-4 focus:ring-0 focus:border-primary/40 focus:bg-surface-container-lowest transition-all placeholder:text-outline"
                   placeholder="exemplo@email.com"
                   type="email"
@@ -54,7 +75,10 @@ const ContatoPage = () => {
               <label className="font-label text-sm font-bold text-on-surface ml-1">
                 Nível de Inglês Atual
               </label>
-              <select className="w-full bg-surface-container-low border-outline-variant/10 rounded-lg px-4 py-4 focus:ring-0 focus:border-primary/40 focus:bg-surface-container-lowest transition-all appearance-none">
+              <select
+                name="nivel"
+                className="w-full bg-surface-container-low border-outline-variant/10 rounded-lg px-4 py-4 focus:ring-0 focus:border-primary/40 focus:bg-surface-container-lowest transition-all appearance-none"
+              >
                 <option>Iniciante (A1/A2)</option>
                 <option>Intermediário (B1/B2)</option>
                 <option>Avançado (C1/C2)</option>
@@ -66,19 +90,45 @@ const ContatoPage = () => {
                 Mensagem
               </label>
               <textarea
+                name="mensagem"
                 className="w-full bg-surface-container-low border-outline-variant/10 rounded-lg px-4 py-4 focus:ring-0 focus:border-primary/40 focus:bg-surface-container-lowest transition-all placeholder:text-outline"
                 placeholder="Conte-me um pouco sobre sua disponibilidade e objetivos..."
                 rows="5"
               ></textarea>
             </div>
+
+            {/* Mensagens de feedback */}
+            {status === 'success' && (
+              <p className="text-sm font-medium text-green-600 bg-green-50 px-4 py-3 rounded-lg">
+                Mensagem enviada com sucesso! Entrarei em contato em breve.
+              </p>
+            )}
+            {status === 'error' && (
+              <p className="text-sm font-medium text-red-600 bg-red-50 px-4 py-3 rounded-lg">
+                Ocorreu um erro ao enviar. Tente novamente ou entre em contato pelo WhatsApp.
+              </p>
+            )}
+
             <button
-              className="w-full md:w-auto bg-secondary-container text-on-secondary-container font-bold px-10 py-4 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-3"
+              className="w-full md:w-auto bg-secondary-container text-on-secondary-container font-bold px-10 py-4 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
+              disabled={status === 'sending'}
             >
-              Agendar Teste de Nível
-              <span className="material-symbols-outlined text-lg">
-                calendar_today
-              </span>
+              {status === 'sending' ? (
+                <>
+                  Enviando...
+                  <span className="material-symbols-outlined text-lg animate-spin">
+                    autorenew
+                  </span>
+                </>
+              ) : (
+                <>
+                  Agendar Teste de Nível
+                  <span className="material-symbols-outlined text-lg">
+                    calendar_today
+                  </span>
+                </>
+              )}
             </button>
           </form>
         </div>
